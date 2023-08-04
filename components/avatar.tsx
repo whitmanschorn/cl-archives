@@ -2,10 +2,16 @@ import Image from 'next/image'
 
 export default function Avatar({ author }) {
   const isAuthorHaveFullName = author?.node?.firstName && author?.node?.lastName
-  const name = isAuthorHaveFullName
-    ? `${author.node.firstName} ${author.node.lastName}`
-    : author.node.name || null
+  let name = null
 
+  if(isAuthorHaveFullName) {
+    name = `${author.node.firstName} ${author.node.lastName}`
+    } else {
+      if(author.node){
+      name = author.node.name
+
+      }
+  }
   return (
     <div className="flex items-center">
       <div className="text-xl font-bold">{name}</div>

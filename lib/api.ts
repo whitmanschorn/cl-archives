@@ -45,18 +45,71 @@ export async function getPreviewPost(id, idType = 'DATABASE_ID') {
 }
 
 export async function getAllPostsWithSlug() {
-  const data = await fetchAPI(`
-    {
-      posts(first: 10000) {
-        edges {
-          node {
-            slug
+  // if we have more results, we need to know!
+
+  let hasMore = true;
+  let cursorString = ''
+  const results = {edges: []};
+
+
+  while(hasMore){
+    let data;
+    if(cursorString){
+       data = await fetchAPI(`
+        query AllPostsWithSlug($cursorString: String!) {
+          posts(first: 10000, last: null, after: $cursorString, before: null) {
+            edges {
+              node {
+                slug
+              }
+              cursor
+            }
           }
         }
-      }
+      `, 
+      {
+      variables: { cursorString },
+    })
+    } else {
+       data = await fetchAPI(`
+        {
+          posts(first: 10000) {
+            edges {
+              node {
+                slug
+              }
+              cursor
+            }
+          }
+        }
+      `)
     }
-  `)
-  return data?.posts
+  
+    // console.log('??? getAllPostsWithSlug', JSON.stringify(data));
+
+
+
+    const PAGINATION_LIMIT = 100
+    const edges = data.posts.edges
+    if(edges.length === PAGINATION_LIMIT){
+      // grab our cursor and repeat
+      cursorString = edges[PAGINATION_LIMIT - 1].cursor
+      console.log('???cursorString', cursorString);
+      results.edges = results.edges.concat(edges)
+    } else {
+      hasMore = false
+    }
+
+  }
+
+
+
+
+
+    // console.log('??? getAllPostsWithSlug2', JSON.stringify(results));
+
+  return results;
+  // return results;
 }
 
 export async function getAllPostsForHome(preview) {

@@ -1,4 +1,5 @@
 export default function Categories({ categories }) {
+  const finalName = categories?.edges?.node?.name || ''
   return (
     <span className="ml-1">
       under
@@ -9,7 +10,7 @@ export default function Categories({ categories }) {
           </span>
         ))
       ) : (
-        <span className="ml-1">{categories.edges.node.name}</span>
+        <span className="ml-1">{finalName}</span>
       )}
     </span>
   )
