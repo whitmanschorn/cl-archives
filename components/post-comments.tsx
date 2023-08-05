@@ -33,11 +33,7 @@ const Comment = ({
   );
 };
 
-const recursiveDefineComments = (
-  commentList,
-  currentComment = null,
-  currentDepth = 0,
-) => {
+const recursiveDefineComments = (commentList, currentComment = null) => {
   let relevantComments = [];
 
   // case: handle root node comments
@@ -49,20 +45,16 @@ const recursiveDefineComments = (
       (item) => item.parentId === currentComment.id,
     );
   }
-
+  if(relevantComments.length > 0){
+    console.log('relevantComments', relevantComments, currentComment, commentList);
+  }
   relevantComments.forEach(
-    (item) =>
-      (item.replies = recursiveDefineComments(
-        commentList,
-        item,
-        currentDepth + 1,
-      )),
+    (item) => (item.replies = recursiveDefineComments(commentList, item)),
   );
 
   return relevantComments;
 };
 
-const PAGINATION_LIMIT = 100;
 export default function PostComments({ post }) {
   const initialComments = post?.comments?.nodes || [];
   const initialHasMoreComments = post.comments.pageInfo.hasNextPage;
@@ -76,20 +68,23 @@ export default function PostComments({ post }) {
   const handleClickMore = async (e) => {
     e.preventDefault();
     const data = await getMoreComments(post.slug, cursor);
-
-    setComments(comments.concat(data.comments));
+    const foo = comments.concat(data.comments)
+    console.log('???', foo, cursor);
+    setComments(foo);
     setCursor(data.pageInfo.endCursor);
     setHasMoreComments(data.pageInfo.hasNextPage);
   };
   let commentTree = recursiveDefineComments(comments);
-
+  console.log({ commentTree, comments });
   return (
     <div>
       <h1>Comments</h1>
       <div>
         <div>
           {commentTree.map((item) => (
-            <div className={styles.container}><Comment {...item} /></div>
+            <div key={item.id} className={styles.container}>
+              <Comment {...item} />
+            </div>
           ))}
           <div>
             {hasMoreComments && (

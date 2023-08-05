@@ -164,9 +164,9 @@ export async function getMoreComments(slug, cursorString) {
     `
     query PostCommentsBySlug($id: ID!, $idType: PostIdType!, $currentCursor: String!) {
       post(id: $id, idType: $idType) {
-        comments(last: 100, first: null, before: $currentCursor, after: null, where: { orderby: COMMENT_DATE }) {
+        comments(first: 100, last: null, after: $currentCursor, before: null, where: { orderby: COMMENT_DATE }) {
         pageInfo {
-      hasPreviousPage
+      hasNextPage
       endCursor
     }
         nodes {
@@ -195,7 +195,6 @@ export async function getMoreComments(slug, cursorString) {
 
   const dataComments = data.post.comments;
   const postComments = dataComments.nodes;
-  hasMore = dataComments.pageInfo.hasPreviousPage;
   return { pageInfo: dataComments.pageInfo, comments: postComments }
 
 }
@@ -236,9 +235,9 @@ export async function getPostAndMorePosts(slug, preview, previewData) {
       }
       comments(first: 100, where: { orderby: COMMENT_DATE }) {
        pageInfo {
-      hasNextPage
-      endCursor
-    }
+          hasNextPage
+          endCursor
+        }
         nodes {
           author {
             node {
