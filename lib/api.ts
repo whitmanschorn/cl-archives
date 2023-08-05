@@ -94,8 +94,12 @@ export async function getAllPostsWithSlug() {
     if(edges.length === PAGINATION_LIMIT){
       // grab our cursor and repeat
       cursorString = edges[PAGINATION_LIMIT - 1].cursor
-      console.log('???cursorString', cursorString);
       results.edges = results.edges.concat(edges)
+
+
+      if(process.env.NODE_ENV === 'development'){
+        hasMore = false
+      }
     } else {
       hasMore = false
     }
@@ -188,6 +192,19 @@ export async function getPostAndMorePosts(slug, preview, previewData) {
           ...AuthorFields
         }
       }
+      comments(first: 100, where: { orderby: COMMENT_DATE }) {
+        nodes {
+          author {
+            node {
+               name
+            }
+          }
+          date
+          id
+          content
+          parentId
+        }
+    }
       categories {
         edges {
           node {
