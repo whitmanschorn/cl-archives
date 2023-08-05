@@ -65,9 +65,10 @@ export default function PostComments({ post }) {
 
   const handleClickMore = async (e) => {
     e.preventDefault();
+    setHasMoreComments(false)
     const data = await getMoreComments(post.slug, cursor);
-    const foo = comments.concat(data.comments)
-    setComments(foo);
+    const allComments = comments.concat(data.comments)
+    setComments(allComments);
     setCursor(data.pageInfo.endCursor);
     setHasMoreComments(data.pageInfo.hasNextPage);
   };

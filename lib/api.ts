@@ -190,8 +190,7 @@ export async function getMoreComments(slug, cursorString) {
 
   const dataComments = data.post.comments;
   const postComments = dataComments.nodes;
-  return { pageInfo: dataComments.pageInfo, comments: postComments }
-
+  return { pageInfo: dataComments.pageInfo, comments: postComments };
 }
 
 export async function getPostAndMorePosts(slug, preview, previewData) {
