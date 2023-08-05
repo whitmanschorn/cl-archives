@@ -23,7 +23,7 @@ export default function Post({ allPosts }) {
   }
 
   return (
-    <Layout>
+    <Layout preview={false}>
       <Container>
         <Header />
         {router.isFallback ? (
