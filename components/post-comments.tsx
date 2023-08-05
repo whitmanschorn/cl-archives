@@ -56,6 +56,7 @@ const recursiveDefineComments = (commentList, currentComment = null) => {
 export default function PostComments({ post }) {
   const initialComments = post?.comments?.nodes || [];
   const initialHasMoreComments = post.comments.pageInfo.hasNextPage;
+  const [isLoading, setIsLoading] = useState(false)
   const [comments, setComments] = useState(initialComments);
   const [cursor, setCursor] = useState(post?.comments?.pageInfo?.endCursor);
 
@@ -66,10 +67,12 @@ export default function PostComments({ post }) {
   const handleClickMore = async (e) => {
     e.preventDefault();
     setHasMoreComments(false)
+    setIsLoading(true)
     const data = await getMoreComments(post.slug, cursor);
     const allComments = comments.concat(data.comments)
     setComments(allComments);
     setCursor(data.pageInfo.endCursor);
+    setIsLoading(false);
     setHasMoreComments(data.pageInfo.hasNextPage);
   };
   let commentTree = recursiveDefineComments(comments);
@@ -87,6 +90,7 @@ export default function PostComments({ post }) {
             {hasMoreComments && (
               <button onClick={handleClickMore}>More Comments</button>
             )}
+            {isLoading && <div>Loading more comments...</div>}
           </div>
         </div>
       </div>
