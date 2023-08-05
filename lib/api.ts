@@ -1,33 +1,33 @@
-const API_URL = process.env.WORDPRESS_API_URL
+const API_URL = process.env.NEXT_PUBLIC_WORDPRESS_API_URL;
 
-async function fetchAPI(query = '', { variables }: Record<string, any> = {}) {
-  const headers = { 'Content-Type': 'application/json' }
+async function fetchAPI(query = "", { variables }: Record<string, any> = {}) {
+  const headers = { "Content-Type": "application/json" };
 
   if (process.env.WORDPRESS_AUTH_REFRESH_TOKEN) {
     headers[
-      'Authorization'
-    ] = `Bearer ${process.env.WORDPRESS_AUTH_REFRESH_TOKEN}`
+      "Authorization"
+    ] = `Bearer ${process.env.WORDPRESS_AUTH_REFRESH_TOKEN}`;
   }
 
   // WPGraphQL Plugin must be enabled
   const res = await fetch(API_URL, {
     headers,
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify({
       query,
       variables,
     }),
-  })
+  });
 
-  const json = await res.json()
+  const json = await res.json();
   if (json.errors) {
-    console.error(json.errors)
-    throw new Error('Failed to fetch API')
+    console.error(json.errors);
+    throw new Error("Failed to fetch API");
   }
-  return json.data
+  return json.data;
 }
 
-export async function getPreviewPost(id, idType = 'DATABASE_ID') {
+export async function getPreviewPost(id, idType = "DATABASE_ID") {
   const data = await fetchAPI(
     `
     query PreviewPost($id: ID!, $idType: PostIdType!) {
@@ -39,23 +39,23 @@ export async function getPreviewPost(id, idType = 'DATABASE_ID') {
     }`,
     {
       variables: { id, idType },
-    }
-  )
-  return data.post
+    },
+  );
+  return data.post;
 }
 
 export async function getAllPostsWithSlug() {
   // if we have more results, we need to know!
 
   let hasMore = true;
-  let cursorString = ''
-  const results = {edges: []};
+  let cursorString = "";
+  const results = { edges: [] };
 
-
-  while(hasMore){
+  while (hasMore) {
     let data;
-    if(cursorString){
-       data = await fetchAPI(`
+    if (cursorString) {
+      data = await fetchAPI(
+        `
         query AllPostsWithSlug($cursorString: String!) {
           posts(first: 10000, last: null, after: $cursorString, before: null) {
             edges {
@@ -66,12 +66,13 @@ export async function getAllPostsWithSlug() {
             }
           }
         }
-      `, 
-      {
-      variables: { cursorString },
-    })
+      `,
+        {
+          variables: { cursorString },
+        },
+      );
     } else {
-       data = await fetchAPI(`
+      data = await fetchAPI(`
         {
           posts(first: 10000) {
             edges {
@@ -82,35 +83,27 @@ export async function getAllPostsWithSlug() {
             }
           }
         }
-      `)
+      `);
     }
-  
+
     // console.log('??? getAllPostsWithSlug', JSON.stringify(data));
 
-
-
-    const PAGINATION_LIMIT = 100
-    const edges = data.posts.edges
-    if(edges.length === PAGINATION_LIMIT){
+    const PAGINATION_LIMIT = 100;
+    const edges = data.posts.edges;
+    if (edges.length === PAGINATION_LIMIT) {
       // grab our cursor and repeat
-      cursorString = edges[PAGINATION_LIMIT - 1].cursor
-      results.edges = results.edges.concat(edges)
+      cursorString = edges[PAGINATION_LIMIT - 1].cursor;
+      results.edges = results.edges.concat(edges);
 
-
-      if(process.env.NODE_ENV === 'development'){
-        hasMore = false
+      if (process.env.NODE_ENV === "development") {
+        hasMore = false;
       }
     } else {
-      hasMore = false
+      hasMore = false;
     }
-
   }
 
-
-
-
-
-    // console.log('??? getAllPostsWithSlug2', JSON.stringify(results));
+  // console.log('??? getAllPostsWithSlug2', JSON.stringify(results));
 
   return results;
   // return results;
@@ -152,21 +145,70 @@ export async function getAllPostsForHome(preview) {
         onlyEnabled: !preview,
         preview,
       },
-    }
-  )
+    },
+  );
 
-  return data?.posts
+  return data?.posts;
+}
+
+export async function getMoreComments(slug, cursorString) {
+  let currentCursor = cursorString;
+  let hasMore = true;
+
+  console.log("getMorePosts fetching", {
+    slug,
+    currentCursor,
+    cursorString,
+  });
+  const data = await fetchAPI(
+    `
+    query PostCommentsBySlug($id: ID!, $idType: PostIdType!, $currentCursor: String!) {
+      post(id: $id, idType: $idType) {
+        comments(last: 100, first: null, before: $currentCursor, after: null, where: { orderby: COMMENT_DATE }) {
+        pageInfo {
+      hasPreviousPage
+      endCursor
+    }
+        nodes {
+          author {
+            node {
+               name
+            }
+          }
+          date
+          id
+          content
+          parentId
+        }
+      }
+    }
+  }
+  `,
+    {
+      variables: {
+        id: slug,
+        idType: "SLUG",
+        currentCursor,
+      },
+    },
+  );
+
+  const dataComments = data.post.comments;
+  const postComments = dataComments.nodes;
+  hasMore = dataComments.pageInfo.hasPreviousPage;
+  return { pageInfo: dataComments.pageInfo, comments: postComments }
+
 }
 
 export async function getPostAndMorePosts(slug, preview, previewData) {
-  const postPreview = preview && previewData?.post
+  const postPreview = preview && previewData?.post;
   // The slug may be the id of an unpublished post
-  const isId = Number.isInteger(Number(slug))
+  const isId = Number.isInteger(Number(slug));
   const isSamePost = isId
     ? Number(slug) === postPreview.id
-    : slug === postPreview.slug
-  const isDraft = isSamePost && postPreview?.status === 'draft'
-  const isRevision = isSamePost && postPreview?.status === 'publish'
+    : slug === postPreview.slug;
+  const isDraft = isSamePost && postPreview?.status === "draft";
+  const isRevision = isSamePost && postPreview?.status === "publish";
   const data = await fetchAPI(
     `
     fragment AuthorFields on User {
@@ -193,6 +235,10 @@ export async function getPostAndMorePosts(slug, preview, previewData) {
         }
       }
       comments(first: 100, where: { orderby: COMMENT_DATE }) {
+       pageInfo {
+      hasNextPage
+      endCursor
+    }
         nodes {
           author {
             node {
@@ -243,7 +289,7 @@ export async function getPostAndMorePosts(slug, preview, previewData) {
           }
         }
         `
-            : ''
+            : ""
         }
       }
       posts(first: 3, where: { orderby: { field: DATE, order: DESC } }) {
@@ -258,25 +304,25 @@ export async function getPostAndMorePosts(slug, preview, previewData) {
     {
       variables: {
         id: isDraft ? postPreview.id : slug,
-        idType: isDraft ? 'DATABASE_ID' : 'SLUG',
+        idType: isDraft ? "DATABASE_ID" : "SLUG",
       },
-    }
-  )
+    },
+  );
 
   // Draft posts may not have an slug
-  if (isDraft) data.post.slug = postPreview.id
+  if (isDraft) data.post.slug = postPreview.id;
   // Apply a revision (changes in a published post)
   if (isRevision && data.post.revisions) {
-    const revision = data.post.revisions.edges[0]?.node
+    const revision = data.post.revisions.edges[0]?.node;
 
-    if (revision) Object.assign(data.post, revision)
-    delete data.post.revisions
+    if (revision) Object.assign(data.post, revision);
+    delete data.post.revisions;
   }
 
   // Filter out the main post
-  data.posts.edges = data.posts.edges.filter(({ node }) => node.slug !== slug)
+  data.posts.edges = data.posts.edges.filter(({ node }) => node.slug !== slug);
   // If there are still 3 posts, remove the last one
-  if (data.posts.edges.length > 2) data.posts.edges.pop()
+  if (data.posts.edges.length > 2) data.posts.edges.pop();
 
-  return data
+  return data;
 }

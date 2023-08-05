@@ -1,6 +1,8 @@
 import styles from "./post-comment.module.css";
 import React, { useState } from "react";
 
+import { getMoreComments } from "../lib/api";
+
 const Comment = ({
   content,
   author,
@@ -63,13 +65,22 @@ const recursiveDefineComments = (
 const PAGINATION_LIMIT = 100;
 export default function PostComments({ post }) {
   const initialComments = post?.comments?.nodes || [];
-  const initialHasMoreComments = initialComments.length === PAGINATION_LIMIT;
-
+  const initialHasMoreComments = post.comments.pageInfo.hasNextPage;
   const [comments, setComments] = useState(initialComments);
+  const [cursor, setCursor] = useState(post?.comments?.pageInfo?.endCursor);
+
   const [hasMoreComments, setHasMoreComments] = useState(
     initialHasMoreComments,
   );
 
+  const handleClickMore = async (e) => {
+    e.preventDefault();
+    const data = await getMoreComments(post.slug, cursor);
+
+    setComments(comments.concat(data.comments));
+    setCursor(data.pageInfo.endCursor);
+    setHasMoreComments(data.pageInfo.hasNextPage);
+  };
   let commentTree = recursiveDefineComments(comments);
 
   return (
@@ -78,9 +89,13 @@ export default function PostComments({ post }) {
       <div>
         <div>
           {commentTree.map((item) => (
-            <Comment {...item} />
+            <div className={styles.container}><Comment {...item} /></div>
           ))}
-          <div>{hasMoreComments && <button>More Comments</button>}</div>
+          <div>
+            {hasMoreComments && (
+              <button onClick={handleClickMore}>More Comments</button>
+            )}
+          </div>
         </div>
       </div>
     </div>
