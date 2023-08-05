@@ -45,9 +45,7 @@ const recursiveDefineComments = (commentList, currentComment = null) => {
       (item) => item.parentId === currentComment.id,
     );
   }
-  if(relevantComments.length > 0){
-    console.log('relevantComments', relevantComments, currentComment, commentList);
-  }
+
   relevantComments.forEach(
     (item) => (item.replies = recursiveDefineComments(commentList, item)),
   );
@@ -69,13 +67,11 @@ export default function PostComments({ post }) {
     e.preventDefault();
     const data = await getMoreComments(post.slug, cursor);
     const foo = comments.concat(data.comments)
-    console.log('???', foo, cursor);
     setComments(foo);
     setCursor(data.pageInfo.endCursor);
     setHasMoreComments(data.pageInfo.hasNextPage);
   };
   let commentTree = recursiveDefineComments(comments);
-  console.log({ commentTree, comments });
   return (
     <div>
       <h1>Comments</h1>

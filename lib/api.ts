@@ -155,11 +155,6 @@ export async function getMoreComments(slug, cursorString) {
   let currentCursor = cursorString;
   let hasMore = true;
 
-  console.log("getMorePosts fetching", {
-    slug,
-    currentCursor,
-    cursorString,
-  });
   const data = await fetchAPI(
     `
     query PostCommentsBySlug($id: ID!, $idType: PostIdType!, $currentCursor: String!) {
