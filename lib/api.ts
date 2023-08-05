@@ -44,6 +44,7 @@ export async function getPreviewPost(id, idType = "DATABASE_ID") {
   return data.post;
 }
 
+// TODO make non-slug fields optional
 export async function getAllPostsWithSlug() {
   // if we have more results, we need to know!
 
@@ -61,6 +62,8 @@ export async function getAllPostsWithSlug() {
             edges {
               node {
                 slug
+                title
+                date
               }
               cursor
             }
@@ -78,6 +81,8 @@ export async function getAllPostsWithSlug() {
             edges {
               node {
                 slug
+                title
+                date
               }
               cursor
             }
@@ -85,8 +90,6 @@ export async function getAllPostsWithSlug() {
         }
       `);
     }
-
-    // console.log('??? getAllPostsWithSlug', JSON.stringify(data));
 
     const PAGINATION_LIMIT = 100;
     const edges = data.posts.edges;
