@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-export default function Categories({ categories, currentValue }) {
+export default function Categories({ categories, currentValue = "" }) {
   const router = useRouter();
   const handleChangeCategory = (e) => {
     router.push(`/categories/${e.target.value}`);

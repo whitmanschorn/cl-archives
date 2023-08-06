@@ -112,7 +112,7 @@ export default function CategoryPage({ id, data, categories }) {
 export const getStaticProps: GetStaticProps = async ({ params }) => {
   const categories = await getCategoriesWithSlug();
 
-  const data = await searchPostsByCategory(params.id);
+  const data = await searchPostsByCategory(params?.id as string);
   return {
     props: {
       id: params.id,
