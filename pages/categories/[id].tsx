@@ -16,7 +16,7 @@ import Tags from "../../components/tags";
 import Spinner from "../../components/spinner";
 import { searchPostsByCategory, getCategoriesWithSlug } from "../../lib/api";
 import { CMS_NAME } from "../../lib/constants";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CategorySelect from "../../components/category-select";
 
 export default function CategoryPage({ id, data, categories }) {
@@ -47,7 +47,8 @@ export default function CategoryPage({ id, data, categories }) {
     fetchSearchResults("", false);
   };
 
-  const { hasNextPage, hasPreviousPage, startCursor, endCursor } = postList.posts.pageInfo;
+  const { hasNextPage, hasPreviousPage, startCursor, endCursor } =
+    postList.posts.pageInfo;
 
   const handleClickNext = (e) => {
     e.preventDefault();
@@ -58,6 +59,10 @@ export default function CategoryPage({ id, data, categories }) {
     e.preventDefault();
     fetchSearchResults(startCursor, true);
   };
+
+  useEffect(() => {
+    setPostList(data);
+  }, [id, data]);
 
   return (
     <Layout preview={false}>
@@ -71,9 +76,8 @@ export default function CategoryPage({ id, data, categories }) {
               <title>Chump Lady Archives</title>
             </Head>
 
-            <h4>Category: {id}</h4>
-
-            <CategorySelect categories={categories} />
+            <CategorySelect currentValue={id} categories={categories} />
+            <br/>
             {isLoading && <Spinner />}
             <br />
             <ul>
@@ -96,9 +100,13 @@ export default function CategoryPage({ id, data, categories }) {
                     </li>
                   );
                 })}
-        <br />
-              {!isLoading && hasPreviousPage && <Button onClick={handleClickPrevious}>Previous</Button>}
-              {!isLoading && hasNextPage && <Button onClick={handleClickNext}>Next</Button>}
+              <br />
+              {!isLoading && hasPreviousPage && (
+                <Button onClick={handleClickPrevious}>Previous</Button>
+              )}
+              {!isLoading && hasNextPage && (
+                <Button onClick={handleClickNext}>Next</Button>
+              )}
             </ul>
           </>
         )}
@@ -109,7 +117,6 @@ export default function CategoryPage({ id, data, categories }) {
 }
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
-
   const categories = await getCategoriesWithSlug();
 
   const data = await searchPostsByCategory(params.id);
@@ -117,9 +124,8 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
     props: {
       id: params.id,
       data,
-      categories
+      categories,
     },
-    revalidate: 10,
   };
 };
 
@@ -129,6 +135,5 @@ export const getStaticPaths: GetStaticPaths = async () => {
   return {
     paths: categories.nodes.map(({ slug }) => `/categories/${slug}`) || [],
     fallback: false,
-  }
-}
-
+  };
+};

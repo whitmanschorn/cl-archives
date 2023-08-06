@@ -1,11 +1,9 @@
 import { useRouter } from "next/router";
 
-export default function Categories({ categories }) {
+export default function Categories({ categories, currentValue }) {
   const router = useRouter();
   const handleChangeCategory = (e) => {
-    console.log('!!!handleChangeCategory', e.target.value);
     router.push(`/categories/${e.target.value}`);
-    // router.refresh()
   };
 
   if (!(categories && categories.nodes && categories.nodes.length > 0)) {
@@ -13,8 +11,8 @@ export default function Categories({ categories }) {
   }
 
   return (
-    <span className="ml-1">
-      <select onChange={handleChangeCategory}>
+    <span className="bg-white text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow">
+      <select initialValue={currentValue} onChange={handleChangeCategory}>
         {categories.nodes.map((category) => (
           <option key={category.slug} value={category.slug} className="ml-1">
             {category.name}
