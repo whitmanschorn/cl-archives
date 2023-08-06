@@ -44,6 +44,29 @@ export async function getPreviewPost(id, idType = "DATABASE_ID") {
   return data.post;
 }
 
+export async function searchPosts(searchString = "") {
+  const data = await fetchAPI(
+    `
+     {
+          posts(first: 100) {
+            edges {
+              node {
+                slug
+                title
+                date
+              }
+              cursor
+            }
+          }
+        }
+      `,
+    {
+      variables: { searchString },
+    },
+  );
+
+  return data;
+}
 // TODO make non-slug fields optional
 export async function getAllPostsWithSlug() {
   // if we have more results, we need to know!
@@ -163,10 +186,10 @@ export async function getMoreComments(slug, cursorString) {
     query PostCommentsBySlug($id: ID!, $idType: PostIdType!, $currentCursor: String!) {
       post(id: $id, idType: $idType) {
         comments(first: 100, last: null, after: $currentCursor, before: null, where: { orderby: COMMENT_DATE }) {
-        pageInfo {
-      hasNextPage
-      endCursor
-    }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
         nodes {
           author {
             node {
