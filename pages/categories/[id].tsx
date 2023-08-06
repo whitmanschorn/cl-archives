@@ -2,41 +2,40 @@ import { useRouter } from "next/router";
 import ErrorPage from "next/error";
 import Head from "next/head";
 import { GetStaticPaths, GetStaticProps } from "next";
-import Button from "../components/button";
-import Container from "../components/container";
-import PostBody from "../components/post-body";
-import MoreStories from "../components/more-stories";
-import Header from "../components/header";
-import PostHeader from "../components/post-header";
-import SectionSeparator from "../components/section-separator";
-import Layout from "../components/layout";
-import PostTitle from "../components/post-title";
-import PostComments from "../components/post-comments";
-import Tags from "../components/tags";
-import CategorySelect from "../components/category-select";
-import Spinner from "../components/spinner";
-import { searchPosts, getPostAndMorePosts, getCategoriesWithSlug } from "../lib/api";
-import { CMS_NAME } from "../lib/constants";
+import Button from "../../components/button";
+import Container from "../../components/container";
+import PostBody from "../../components/post-body";
+import MoreStories from "../../components/more-stories";
+import Header from "../../components/header";
+import PostHeader from "../../components/post-header";
+import SectionSeparator from "../../components/section-separator";
+import Layout from "../../components/layout";
+import PostTitle from "../../components/post-title";
+import PostComments from "../../components/post-comments";
+import Tags from "../../components/tags";
+import Spinner from "../../components/spinner";
+import { searchPostsByCategory, getCategoriesWithSlug } from "../../lib/api";
+import { CMS_NAME } from "../../lib/constants";
 import { useState } from "react";
+import CategorySelect from "../../components/category-select";
 
-export default function SearchPage({ allPosts, categories }) {
+export default function CategoryPage({ id, data, categories }) {
   const router = useRouter();
 
-  const [postList, setPostList] = useState(allPosts);
+  const [postList, setPostList] = useState(data);
   const [isLoading, setIsLoading] = useState(false);
-  const [query, setQuery] = useState(router.query.q || "");
 
-  if (!router.isFallback && !allPosts) {
+  if (!router.isFallback && !postList) {
     return <ErrorPage statusCode={404} />;
   }
 
-  if (!(allPosts && allPosts.length > 0)) {
+  if (!(postList && postList.length > 0)) {
     <Layout preview={false}>Loading...</Layout>;
   }
 
-  const fetchSearchResults = async (query, cursor, isBefore = false) => {
+  const fetchSearchResults = async (cursor, isBefore = false) => {
     setIsLoading(true);
-    const updatedPosts = await searchPosts(query, cursor, isBefore);
+    const updatedPosts = await searchPostsByCategory(id, cursor, isBefore);
     setPostList(updatedPosts);
     setIsLoading(false);
   };
@@ -45,20 +44,19 @@ export default function SearchPage({ allPosts, categories }) {
     e.preventDefault();
     const queryInputValue = e.target.query.value;
     setQuery(queryInputValue);
-    fetchSearchResults(queryInputValue, "", false);
+    fetchSearchResults("", false);
   };
 
-  const { hasNextPage, hasPreviousPage, startCursor, endCursor } =
-    postList?.posts.pageInfo;
+  const { hasNextPage, hasPreviousPage, startCursor, endCursor } = postList.posts.pageInfo;
 
   const handleClickNext = (e) => {
     e.preventDefault();
-    fetchSearchResults(query, endCursor, false);
+    fetchSearchResults(endCursor, false);
   };
 
   const handleClickPrevious = (e) => {
     e.preventDefault();
-    fetchSearchResults(query, startCursor, true);
+    fetchSearchResults(startCursor, true);
   };
 
   return (
@@ -73,18 +71,9 @@ export default function SearchPage({ allPosts, categories }) {
               <title>Chump Lady Archives</title>
             </Head>
 
-            <CategorySelect categories={categories} />
-            <form onSubmit={onSubmitSearch}>
-              <input
-                name="query"
-                id="query"
-                type="text"
-                className={
-                  "shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                }
-              />
-            </form>
+            <h4>Category: {id}</h4>
 
+            <CategorySelect categories={categories} />
             {isLoading && <Spinner />}
             <br />
             <ul>
@@ -119,14 +108,27 @@ export default function SearchPage({ allPosts, categories }) {
   );
 }
 
-export const getStaticProps: GetStaticProps = async ({}) => {
-  const allPosts = await searchPosts();
+export const getStaticProps: GetStaticProps = async ({ params }) => {
+
   const categories = await getCategoriesWithSlug();
+
+  const data = await searchPostsByCategory(params.id);
   return {
     props: {
-      allPosts,
+      id: params.id,
+      data,
       categories
     },
     revalidate: 10,
   };
 };
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const categories = await getCategoriesWithSlug();
+
+  return {
+    paths: categories.nodes.map(({ slug }) => `/categories/${slug}`) || [],
+    fallback: false,
+  }
+}
+

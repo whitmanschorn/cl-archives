@@ -106,7 +106,81 @@ export async function searchPosts(
 
   return data;
 }
-// TODO make non-slug fields optional
+
+export async function searchPostsByCategory(
+  slug = "",
+  currentCursor = "",
+  isBefore = false,
+) {
+  let data;
+  if (isBefore) {
+    data = await fetchAPI(
+      `
+      query GetCategoryPostsBySlug($currentCursor: String!, $slug: [String]) {
+  categories(where: {slug: $slug}) {
+    edges {
+      node {
+        posts(last: 10, before: $currentCursor) {          
+          pageInfo {
+            hasNextPage
+            hasPreviousPage
+            endCursor
+            startCursor
+          }
+          edges {
+            node {
+              id
+              slug
+              title
+              date
+            }
+          }
+        }
+      }
+    }
+  }
+}
+      `,
+      {
+        variables: { slug: [slug], currentCursor },
+      },
+    );
+  } else {
+    data = await fetchAPI(
+      `
+      query GetCategoryPostsBySlug($currentCursor: String!, $slug: [String]) {
+  categories(where: {slug: $slug}) {
+    edges {
+      node {
+        posts(first: 10, after: $currentCursor) {
+          pageInfo {
+            hasNextPage
+            hasPreviousPage
+            endCursor
+            startCursor
+          }
+          edges {
+            node {
+              id
+              slug
+              title
+              date
+            }
+          }
+        }
+      }
+    }
+  }
+}
+      `,
+      {
+        variables: { slug: [slug], currentCursor },
+      },
+    );
+  }
+  return data.categories.edges[0].node;
+}
+
 export async function getAllPostsWithSlug() {
   // if we have more results, we need to know!
 
@@ -169,6 +243,22 @@ export async function getAllPostsWithSlug() {
   }
 
   return results;
+}
+
+export async function getCategoriesWithSlug() {
+  const data = await fetchAPI(`
+    query getCategoryNodes {
+      categories(first: 100) {
+          nodes {
+            id
+            name
+            slug
+          }
+        }
+      }
+  `);
+
+  return data.categories;
 }
 
 export async function getAllPostsForHome(preview) {
