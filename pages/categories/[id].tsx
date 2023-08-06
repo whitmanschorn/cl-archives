@@ -40,13 +40,6 @@ export default function CategoryPage({ id, data, categories }) {
     setIsLoading(false);
   };
 
-  const onSubmitSearch = async (e) => {
-    e.preventDefault();
-    const queryInputValue = e.target.query.value;
-    setQuery(queryInputValue);
-    fetchSearchResults("", false);
-  };
-
   const { hasNextPage, hasPreviousPage, startCursor, endCursor } =
     postList.posts.pageInfo;
 
