@@ -14,14 +14,15 @@ const Comment = ({
 }) => {
   return (
     <div key={id} className={styles.comment}>
-      <div className={styles.byline}>
+      <div key="author" className={styles.byline}>
         {author?.node?.name} at {date}
       </div>
       <div
+        key="content"
         className={styles.content}
         dangerouslySetInnerHTML={{ __html: content }}
       />
-      <div>
+      <div key="replies">
         {replies.length > 0 && <h4>Replies</h4>}
         <div>
           {replies.map((replyItem) => (
@@ -56,7 +57,7 @@ const recursiveDefineComments = (commentList, currentComment = null) => {
 export default function PostComments({ post }) {
   const initialComments = post?.comments?.nodes || [];
   const initialHasMoreComments = post.comments.pageInfo.hasNextPage;
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
   const [comments, setComments] = useState(initialComments);
   const [cursor, setCursor] = useState(post?.comments?.pageInfo?.endCursor);
 
@@ -66,10 +67,10 @@ export default function PostComments({ post }) {
 
   const handleClickMore = async (e) => {
     e.preventDefault();
-    setHasMoreComments(false)
-    setIsLoading(true)
+    setHasMoreComments(false);
+    setIsLoading(true);
     const data = await getMoreComments(post.slug, cursor);
-    const allComments = comments.concat(data.comments)
+    const allComments = comments.concat(data.comments);
     setComments(allComments);
     setCursor(data.pageInfo.endCursor);
     setIsLoading(false);
@@ -90,7 +91,7 @@ export default function PostComments({ post }) {
             {hasMoreComments && (
               <button onClick={handleClickMore}>More Comments</button>
             )}
-            {isLoading && <div>Loading more comments...</div>}
+            {isLoading && <div>Loading more ...</div>}
           </div>
         </div>
       </div>

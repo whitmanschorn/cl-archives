@@ -44,26 +44,65 @@ export async function getPreviewPost(id, idType = "DATABASE_ID") {
   return data.post;
 }
 
-export async function searchPosts(searchString = "") {
-  const data = await fetchAPI(
-    `
-     {
-          posts(first: 100) {
-            edges {
-              node {
-                slug
-                title
-                date
-              }
-              cursor
+export async function searchPosts(
+  searchString = "",
+  currentCursor = "",
+  isBefore = false,
+) {
+  let data;
+  if (isBefore) {
+    data = await fetchAPI(
+      `
+      query SearchPosts($searchString: String!, $currentCursor: String!) {
+        posts(last: 20, before: $currentCursor, where: { search: $searchString }) {
+          pageInfo {
+            hasNextPage
+            hasPreviousPage
+            endCursor
+            startCursor
+          }
+          edges {
+            node {
+              slug
+              title
+              date
             }
+            cursor
           }
         }
+      }
       `,
-    {
-      variables: { searchString },
-    },
-  );
+      {
+        variables: { searchString, currentCursor },
+      },
+    );
+  } else {
+    data = await fetchAPI(
+      `
+      query SearchPosts($searchString: String!, $currentCursor: String!) {
+        posts(first: 20, after: $currentCursor, where: { search: $searchString }) {
+          pageInfo {
+            hasNextPage
+            hasPreviousPage
+            endCursor
+            startCursor
+          }
+          edges {
+            node {
+              slug
+              title
+              date
+            }
+            cursor
+          }
+        }
+      }
+      `,
+      {
+        variables: { searchString, currentCursor },
+      },
+    );
+  }
 
   return data;
 }
@@ -129,10 +168,7 @@ export async function getAllPostsWithSlug() {
     }
   }
 
-  // console.log('??? getAllPostsWithSlug2', JSON.stringify(results));
-
   return results;
-  // return results;
 }
 
 export async function getAllPostsForHome(preview) {
