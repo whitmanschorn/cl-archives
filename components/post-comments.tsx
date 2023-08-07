@@ -26,7 +26,7 @@ const Comment = ({
         {replies.length > 0 && <h4>Replies</h4>}
         <div>
           {replies.map((replyItem) => (
-            <Comment {...replyItem}></Comment>
+            <Comment key={replyItem.id} {...replyItem}></Comment>
           ))}
         </div>
       </div>
