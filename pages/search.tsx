@@ -15,7 +15,7 @@ import PostComments from "../components/post-comments";
 import Tags from "../components/tags";
 import CategorySelect from "../components/category-select";
 import Spinner from "../components/spinner";
-import { searchPosts, getPostAndMorePosts, getCategoriesWithSlug } from "../lib/api";
+import { searchPosts, getCategoriesWithSlug } from "../lib/api";
 import { CMS_NAME } from "../lib/constants";
 import { useState } from "react";
 
