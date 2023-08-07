@@ -79,7 +79,7 @@ export default function PostComments({ post }) {
   let commentTree = recursiveDefineComments(comments);
   return (
     <div>
-      <h1>Comments</h1>
+      <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold ">Comments</h1>
       <div>
         <div>
           {commentTree.map((item) => (
